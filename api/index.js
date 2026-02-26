@@ -283,13 +283,19 @@ function buildNotif(obf) {
   const [ts, pl, gui, fr, img, tl, sl, stl, bar, fill, log] = Array.from({ length: 11 }, () => obf.varName());
   return `
 local ${ts}=game:GetService("TweenService")
-local ${pl}=game:GetService("Players").LocalPlayer
 local RunService=game:GetService("RunService")
+local ${pl}
+repeat ${pl}=game:GetService("Players").LocalPlayer task.wait() until ${pl}~=nil
 local function createNotif(callback)
+  task.spawn(function()
+  if not ${pl} then if callback then callback() end return end
+  local ok,err=pcall(function()
   local ${gui}=Instance.new("ScreenGui")
   ${gui}.Name="LoadingScreen" ${gui}.ResetOnSpawn=false
   ${gui}.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
-  ${gui}.Parent=${pl}:WaitForChild("PlayerGui")
+  local pg=${pl}:FindFirstChild("PlayerGui")
+  if not pg then if callback then callback() end return end
+  ${gui}.Parent=pg
   local ${fr}=Instance.new("Frame")
   ${fr}.AnchorPoint=Vector2.new(0.5,0.5) ${fr}.Position=UDim2.new(0.5,0,0.5,0)
   ${fr}.Size=UDim2.new(0,0,0,0) ${fr}.BackgroundColor3=Color3.fromRGB(15,20,35)
@@ -301,7 +307,7 @@ local function createNotif(callback)
   ${img}.Size=UDim2.new(0,80,0,80) ${img}.Position=UDim2.new(0.5,0,0,20)
   ${img}.AnchorPoint=Vector2.new(0.5,0) ${img}.BackgroundColor3=Color3.fromRGB(30,40,60)
   ${img}.BorderSizePixel=0
-  ${img}.Image="https://www.roblox.com/headshot-thumbnail/image?userId="..${pl}.UserId.."&width=150&height=150&format=png"
+  ${img}.Image="https://www.roblox.com/headshot-thumbnail/image?userId="..(${pl}.UserId or 0).."&width=150&height=150&format=png"
   ${img}.Parent=${fr}
   local ac=Instance.new("UICorner") ac.CornerRadius=UDim.new(1,0) ac.Parent=${img}
   local as=Instance.new("UIStroke") as.Color=Color3.fromRGB(0,145,255) as.Thickness=2 as.Transparency=0.3 as.Parent=${img}
@@ -357,6 +363,12 @@ local function createNotif(callback)
     task.wait(0.5)
     ${gui}:Destroy()
     if callback and type(callback)=="function" then callback() end
+  end)
+  end)
+  if not ok then
+    warn("Notif error: "..tostring(err))
+    if callback and type(callback)=="function" then callback() end
+  end
   end)
 end`;
 }
