@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "rewrites": [
+    { "source": "/", "destination": "/api/index" },
+    { "source": "/generate", "destination": "/api/index" },
+    { "source": "/admin/list-users", "destination": "/api/index" },
+    { "source": "/admin/reset-hwid", "destination": "/api/index" },
+    { "source": "/admin/check-hwid", "destination": "/api/index" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate" }
+      ]
+    }
+  ]
+}

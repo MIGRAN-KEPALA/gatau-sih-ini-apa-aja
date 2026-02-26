@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rebels Script</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg    : #050709;
+      --surf  : #0a0c12;
+      --a     : #38bdf8;
+      --a2    : #818cf8;
+      --text  : #e0eaf5;
+      --muted : #4b607a;
+      --border: rgba(255,255,255,0.06);
+    }
+    *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body { height:100%; }
+    body {
+      font-family:'Space Grotesk',sans-serif;
+      background:var(--bg); color:var(--text);
+      min-height:100vh; overflow:hidden;
+      display:flex; align-items:center; justify-content:center;
+      position:relative;
+    }
+
+    /* ── BACKGROUND ── */
+    .bg-grid {
+      position:fixed; inset:0; pointer-events:none;
+      background:
+        linear-gradient(rgba(56,189,248,0.022) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(56,189,248,0.022) 1px,transparent 1px);
+      background-size:60px 60px;
+    }
+    .bg-orb1 {
+      position:fixed; pointer-events:none;
+      top:-20%; left:-15%; width:50%; height:50%;
+      background:radial-gradient(circle,rgba(56,189,248,0.06) 0%,transparent 65%);
+      animation:orb1 16s ease-in-out infinite alternate;
+    }
+    .bg-orb2 {
+      position:fixed; pointer-events:none;
+      bottom:-25%; right:-20%; width:55%; height:55%;
+      background:radial-gradient(circle,rgba(129,140,248,0.05) 0%,transparent 65%);
+      animation:orb2 20s ease-in-out infinite alternate;
+    }
+    @keyframes orb1 { from{transform:translate(0,0)} to{transform:translate(10%,8%)} }
+    @keyframes orb2 { from{transform:translate(0,0)} to{transform:translate(-8%,-10%)} }
+
+    /* scan line */
+    .scanlines {
+      position:fixed; inset:0; pointer-events:none; z-index:0;
+      background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.04) 2px,rgba(0,0,0,.04) 4px);
+    }
+
+    /* ── CARD ── */
+    .wrap { position:relative; z-index:10; width:100%; max-width:480px; padding:24px; }
+
+    .card {
+      background:rgba(10,12,18,0.8);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:40px 36px 34px;
+      backdrop-filter:blur(20px);
+      position:relative; overflow:hidden;
+      animation:cardIn .5s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes cardIn { from{opacity:0;transform:translateY(22px) scale(.97)} to{opacity:1;transform:translateY(0) scale(1)} }
+
+    /* top gradient line */
+    .card::before {
+      content:''; position:absolute; top:0; left:10%; right:10%; height:1px;
+      background:linear-gradient(90deg,transparent,var(--a),var(--a2),transparent);
+      opacity:.7;
+    }
+    /* inner glow */
+    .card::after {
+      content:''; position:absolute; top:-60%; left:50%; transform:translateX(-50%);
+      width:70%; height:60%;
+      background:radial-gradient(ellipse,rgba(56,189,248,0.04) 0%,transparent 70%);
+      pointer-events:none;
+    }
+
+    /* ── LOGO AREA ── */
+    .logo-row {
+      display:flex; align-items:center; gap:14px; margin-bottom:28px;
+    }
+    .logo-shape {
+      width:46px; height:46px; border-radius:12px; flex-shrink:0;
+      background:linear-gradient(135deg,var(--a),var(--a2));
+      display:flex; align-items:center; justify-content:center;
+      font-size:20px;
+      box-shadow:0 0 28px rgba(56,189,248,0.22), 0 0 60px rgba(56,189,248,0.08);
+      position:relative;
+    }
+    .logo-shape::after {
+      content:''; position:absolute; inset:1px; border-radius:11px;
+      background:linear-gradient(135deg,rgba(255,255,255,.1),transparent);
+    }
+    .logo-texts {}
+    .logo-name {
+      font-family:'Space Mono',monospace;
+      font-size:15px; font-weight:700; letter-spacing:.12em; text-transform:uppercase;
+      background:linear-gradient(90deg,var(--a),var(--a2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .logo-sub {
+      font-family:'Space Mono',monospace; font-size:9px; letter-spacing:.18em;
+      text-transform:uppercase; color:var(--muted); margin-top:2px;
+    }
+
+    /* ── HEADLINE ── */
+    .headline {
+      font-size:clamp(1.9rem,5vw,2.6rem); font-weight:700;
+      letter-spacing:-.03em; line-height:1.08; margin-bottom:10px;
+    }
+    .headline span {
+      background:linear-gradient(135deg,var(--a) 20%,var(--a2) 80%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+    .sub {
+      font-size:13px; color:var(--muted); line-height:1.68; margin-bottom:30px;
+    }
+
+    /* ── CODE BOX ── */
+    .code-box {
+      background:rgba(0,0,0,.35); border:1px solid rgba(56,189,248,.14);
+      border-radius:10px; padding:16px 18px; margin-bottom:11px;
+      position:relative; overflow:hidden;
+    }
+    .code-box::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:1px;
+      background:linear-gradient(90deg,transparent,rgba(56,189,248,.3),transparent);
+    }
+    .code-label {
+      font-family:'Space Mono',monospace; font-size:8.5px; letter-spacing:.2em;
+      text-transform:uppercase; color:var(--muted); margin-bottom:9px;
+      display:flex; align-items:center; gap:8px;
+    }
+    .code-label::before {
+      content:''; display:inline-block; width:6px; height:6px; border-radius:50%;
+      background:var(--a); box-shadow:0 0 8px var(--a);
+      animation:blink 1.4s ease-in-out infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.3} }
+    .code-text {
+      font-family:'Space Mono',monospace; font-size:12.5px; color:var(--a);
+      word-break:break-all; line-height:1.55; user-select:all;
+    }
+
+    /* ── COPY BUTTON ── */
+    .copy-btn {
+      width:100%; padding:13px;
+      background:linear-gradient(135deg,rgba(56,189,248,.1),rgba(129,140,248,.1));
+      border:1px solid rgba(56,189,248,.2); border-radius:9px;
+      color:var(--a); font-family:'Space Grotesk',sans-serif;
+      font-size:12.5px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+      cursor:pointer; transition:all .22s;
+      display:flex; align-items:center; justify-content:center; gap:9px;
+      position:relative; overflow:hidden;
+    }
+    .copy-btn::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(135deg,rgba(56,189,248,.08),rgba(129,140,248,.08));
+      opacity:0; transition:opacity .22s;
+    }
+    .copy-btn:hover { border-color:rgba(56,189,248,.4); transform:translateY(-1px); box-shadow:0 8px 24px rgba(56,189,248,.1); }
+    .copy-btn:hover::before { opacity:1; }
+    .copy-btn:active { transform:translateY(0); }
+    .copy-btn.done { color:#4ade80; border-color:rgba(74,222,128,.3); }
+    .copy-btn.done::before { background:linear-gradient(135deg,rgba(74,222,128,.05),transparent); opacity:1; }
+
+    /* ── FOOTER ── */
+    .foot {
+      margin-top:22px; display:flex; align-items:center; justify-content:center; gap:10px;
+      font-family:'Space Mono',monospace; font-size:9px; letter-spacing:.14em;
+      text-transform:uppercase; color:rgba(75,96,122,.6);
+    }
+    .foot::before,.foot::after {
+      content:''; flex:1; height:1px; background:rgba(255,255,255,.05);
+    }
+
+    /* ── GUARD ── */
+    .gd {
+      position:fixed; inset:0; background:rgba(5,7,12,.93);
+      backdrop-filter:blur(18px) saturate(.6);
+      display:none; align-items:center; justify-content:center; z-index:9999;
+    }
+    .gd.on { display:flex; }
+    .gc {
+      position:relative; max-width:380px; width:90%; border-radius:18px;
+      overflow:hidden; animation:gIn .42s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes gIn { from{opacity:0;transform:translateY(22px) scale(.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .gg { position:absolute; inset:-1px; border-radius:19px; background:conic-gradient(from 0deg,transparent,rgba(248,113,113,.5) 60deg,transparent 120deg,transparent 300deg,rgba(248,113,113,.5)); animation:sp 4s linear infinite; }
+    @keyframes sp { to{transform:rotate(360deg)} }
+    .gi { position:relative; z-index:1; margin:1px; border-radius:17px; background:linear-gradient(155deg,#130d0d,#0d0a14); padding:30px 26px 24px; text-align:center; }
+    .gi-code { font-family:'Space Mono',monospace; font-size:8px; letter-spacing:.2em; color:rgba(248,113,113,.35); text-transform:uppercase; margin-bottom:8px; }
+    .gi-title { font-size:17px; font-weight:700; margin-bottom:8px; background:linear-gradient(135deg,#f87171,#fca5a5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .gi-msg { font-size:11.5px; color:rgba(226,232,240,.4); line-height:1.6; margin-bottom:18px; }
+    .gi-btn { display:inline-flex; align-items:center; gap:6px; padding:9px 18px; background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.2); border-radius:8px; color:#f87171; font-family:'Space Grotesk',sans-serif; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .2s; }
+    .gi-btn:hover { background:rgba(248,113,113,.15); transform:translateY(-1px); }
+    .gi-cd { font-family:'Space Mono',monospace; font-size:9px; color:rgba(248,113,113,.28); margin-top:9px; }
+  </style>
+</head>
+<body>
+
+<div class="bg-grid"></div>
+<div class="bg-orb1"></div>
+<div class="bg-orb2"></div>
+<div class="scanlines"></div>
+
+<!-- ── guard ── -->
+<div class="gd" id="gd">
+  <div class="gc">
+    <div class="gg"></div>
+    <div class="gi">
+      <div class="gi-code">ERR · 0x403 · BLOCKED</div>
+      <div class="gi-title">Action Blocked</div>
+      <div class="gi-msg">Tindakan ini tidak diizinkan.</div>
+      <button class="gi-btn" onclick="dg()">✕ Dismiss</button>
+      <div class="gi-cd" id="gcd"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── card ── -->
+<div class="wrap">
+  <div class="card">
+    <div class="logo-row">
+      <div class="logo-shape">🛡</div>
+      <div class="logo-texts">
+        <div class="logo-name">Rebels</div>
+        <div class="logo-sub">Protected System</div>
+      </div>
+    </div>
+
+    <div class="headline">Roblox <span>Script</span><br>Distribution</div>
+    <p class="sub">Script ini hanya bisa diakses via Roblox executor.<br>Salin loadstring di bawah &amp; jalankan di executor kamu.</p>
+
+    <div class="code-box">
+      <div class="code-label">Loadstring</div>
+      <div class="code-text" id="ls">loadstring(game:HttpGet("https://your-project.vercel.app/"))()</div>
+    </div>
+
+    <button class="copy-btn" id="cpBtn" onclick="copy()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <rect x="5" y="5" width="8" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3"/>
+        <path d="M9 5V3.5A1.5 1.5 0 007.5 2H3A1.5 1.5 0 001.5 3.5v4.5A1.5 1.5 0 003 9.5H5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+      </svg>
+      <span id="cpTxt">Copy Loadstring</span>
+    </button>
+
+    <div class="foot">Protected by Rebels Anti-Downloader</div>
+  </div>
+</div>
+
+<script>
+  // Auto-fill loadstring with actual page URL
+  const ls = document.getElementById('ls');
+  ls.textContent = `loadstring(game:HttpGet("${location.origin}/"))()`;
+
+  function copy() {
+    const txt = ls.textContent;
+    const btn = document.getElementById('cpBtn');
+    const lbl = document.getElementById('cpTxt');
+    navigator.clipboard.writeText(txt).catch(() => {
+      const a = document.createElement('textarea');
+      a.value = txt; document.body.appendChild(a); a.select();
+      document.execCommand('copy'); document.body.removeChild(a);
+    });
+    btn.classList.add('done');
+    lbl.textContent = '✓ Copied!';
+    setTimeout(() => { btn.classList.remove('done'); lbl.textContent = 'Copy Loadstring'; }, 2400);
+  }
+
+  // protection
+  let gt;
+  function sg() { const o=document.getElementById('gd');o.classList.add('on');let t=3;const c=document.getElementById('gcd');c.textContent=`Auto-dismiss in ${t}s`;clearInterval(gt);gt=setInterval(()=>{if(--t<=0){clearInterval(gt);dg();}else c.textContent=`Auto-dismiss in ${t}s`;},1000); }
+  function dg() { clearInterval(gt); document.getElementById('gd').classList.remove('on'); }
+  document.addEventListener('contextmenu',e=>{e.preventDefault();sg();});
+  document.addEventListener('keydown',e=>{if(e.keyCode===123||(e.ctrlKey&&e.shiftKey&&[73,74,67].includes(e.keyCode))||(e.ctrlKey&&[85,83].includes(e.keyCode))){e.preventDefault();sg();}});
+  document.addEventListener('selectstart',e=>{if(!['INPUT','TEXTAREA'].includes(e.target.tagName))e.preventDefault();});
+  document.addEventListener('keyup',e=>{if(e.key==='PrintScreen'){navigator.clipboard?.writeText('');sg();}});
+  window.addEventListener('beforeprint',e=>{e.preventDefault();sg();});
+  if(window.top!==window.self)window.top.location=window.self.location;
+  setInterval(()=>console.clear(),2500);
+  const no=()=>{};['log','debug','info','warn','error'].forEach(m=>console[m]=no);
+</script>
+</body>
+</html>

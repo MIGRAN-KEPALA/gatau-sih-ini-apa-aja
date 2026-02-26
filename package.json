@@ -1,0 +1,15 @@
+{
+  "name": "rebels-backend",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.34.0"
+  },
+  "devDependencies": {
+    "vercel": "^37.0.0"
+  }
+}

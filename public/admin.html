@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rebels · Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── TOKENS ── */
+    :root {
+      --bg      : #07090e;
+      --surf    : #0c0f17;
+      --panel   : #10141f;
+      --border  : rgba(255,255,255,0.055);
+      --bhi     : rgba(96,165,250,0.32);
+      --accent  : #60a5fa;
+      --accent2 : #a78bfa;
+      --danger  : #f87171;
+      --success : #4ade80;
+      --warn    : #fb923c;
+      --text    : #e2e8f0;
+      --muted   : #475569;
+      --faint   : rgba(255,255,255,0.03);
+      --glow-a  : rgba(96,165,250,0.08);
+      --glow-d  : rgba(248,113,113,0.08);
+    }
+    *,*::before,*::after { margin:0; padding:0; box-sizing:border-box; }
+    html { scroll-behavior:smooth; }
+    body {
+      font-family:'Syne',sans-serif;
+      background:var(--bg);
+      color:var(--text);
+      min-height:100vh;
+      overflow-x:hidden;
+    }
+
+    /* grid + ambient orb */
+    body::before {
+      content:''; position:fixed; inset:0; pointer-events:none;
+      background:
+        linear-gradient(rgba(96,165,250,0.028) 1px,transparent 1px),
+        linear-gradient(90deg,rgba(96,165,250,0.028) 1px,transparent 1px);
+      background-size:48px 48px;
+    }
+    body::after {
+      content:''; position:fixed; pointer-events:none;
+      top:-25%; right:-15%; width:55%; height:55%;
+      background:radial-gradient(circle,rgba(96,165,250,0.05) 0%,transparent 65%);
+      animation:drift 14s ease-in-out infinite alternate;
+    }
+    @keyframes drift { from{transform:translate(0,0)} to{transform:translate(-8%,10%)} }
+
+    /* ── SIDEBAR ── */
+    .sb {
+      position:fixed; left:0; top:0; bottom:0; width:232px;
+      background:var(--surf); border-right:1px solid var(--border);
+      display:flex; flex-direction:column; z-index:100;
+    }
+    .sb-logo {
+      padding:26px 22px 22px;
+      border-bottom:1px solid var(--border);
+    }
+    .logo-wrap { display:flex; align-items:center; gap:11px; }
+    .logo-ico {
+      width:38px; height:38px; border-radius:10px; flex-shrink:0;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      display:flex; align-items:center; justify-content:center;
+      font-size:17px;
+      box-shadow:0 0 24px rgba(96,165,250,0.28);
+    }
+    .logo-name { font-size:14px; font-weight:800; letter-spacing:0.1em; text-transform:uppercase; }
+    .logo-tag {
+      font-family:'JetBrains Mono',monospace; font-size:9px;
+      color:var(--muted); letter-spacing:0.16em; text-transform:uppercase; margin-top:2px;
+    }
+    .sb-nav { flex:1; padding:14px 10px; display:flex; flex-direction:column; gap:3px; }
+    .nav-cat {
+      font-family:'JetBrains Mono',monospace; font-size:8.5px;
+      letter-spacing:0.2em; text-transform:uppercase; color:var(--muted);
+      padding:10px 12px 4px; margin-top:4px;
+    }
+    .nav-item {
+      display:flex; align-items:center; gap:9px;
+      padding:10px 12px; border-radius:9px;
+      color:var(--muted); font-size:12.5px; font-weight:600;
+      border:1px solid transparent; cursor:pointer; user-select:none;
+      transition:color .2s, background .2s, border-color .2s;
+    }
+    .nav-item:hover { color:var(--text); background:var(--faint); }
+    .nav-item.on {
+      color:var(--accent); background:rgba(96,165,250,0.07);
+      border-color:rgba(96,165,250,0.14);
+    }
+    .nav-item.on::before {
+      content:''; position:absolute; left:0; top:50%; transform:translateY(-50%);
+      width:3px; height:16px; background:var(--accent); border-radius:0 3px 3px 0;
+    }
+    .nav-item { position:relative; }
+    .nav-ic { font-size:14px; width:18px; text-align:center; }
+    .sb-foot {
+      padding:14px; border-top:1px solid var(--border);
+    }
+    .online-pill {
+      display:flex; align-items:center; gap:8px;
+      padding:10px 12px; border-radius:8px;
+      background:rgba(74,222,128,0.05); border:1px solid rgba(74,222,128,0.14);
+    }
+    .dot { width:7px; height:7px; border-radius:50%; background:var(--success); position:relative; }
+    .dot::after {
+      content:''; position:absolute; inset:-3px; border-radius:50%;
+      background:var(--success); opacity:.35;
+      animation:pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{transform:scale(1);opacity:.35} 50%{transform:scale(1.7);opacity:0} }
+    .online-txt { font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--success); letter-spacing:.05em; }
+
+    /* ── MAIN ── */
+    .main { margin-left:232px; min-height:100vh; position:relative; z-index:1; }
+    .topbar {
+      position:sticky; top:0; z-index:50;
+      padding:14px 30px;
+      background:rgba(7,9,14,.85); backdrop-filter:blur(14px);
+      border-bottom:1px solid var(--border);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .topbar-l { font-size:12px; font-weight:700; letter-spacing:.05em; color:var(--text); }
+    .topbar-r { display:flex; align-items:center; gap:10px; }
+    .clock {
+      font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--muted); letter-spacing:.1em;
+    }
+    .auth-pill {
+      display:flex; align-items:center; gap:6px;
+      padding:5px 10px; border-radius:6px;
+      background:rgba(96,165,250,0.07); border:1px solid rgba(96,165,250,0.18);
+      font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--accent); letter-spacing:.04em;
+    }
+
+    /* ── CONTENT ── */
+    .content { padding:30px; }
+    .ph { margin-bottom:26px; }
+    .ph-eye {
+      font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.22em;
+      text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+    }
+    .ph-title { font-size:25px; font-weight:800; letter-spacing:-.02em; }
+    .ph-title span {
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    }
+
+    /* stats */
+    .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:26px; }
+    .scard {
+      background:var(--surf); border:1px solid var(--border); border-radius:12px;
+      padding:18px 20px; position:relative; overflow:hidden;
+      transition:border-color .25s;
+    }
+    .scard:hover { border-color:var(--bhi); }
+    .scard::before {
+      content:''; position:absolute; top:0; left:0; right:0; height:1px;
+      background:linear-gradient(90deg,transparent,var(--accent),transparent);
+      opacity:0; transition:opacity .3s;
+    }
+    .scard:hover::before { opacity:1; }
+    .sc-label { font-family:'JetBrains Mono',monospace; font-size:9px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+    .sc-val { font-size:30px; font-weight:800; letter-spacing:-.03em; margin-bottom:4px; }
+    .sc-val.blue   { color:var(--accent); }
+    .sc-val.green  { color:var(--success); }
+    .sc-val.purple { color:var(--accent2); }
+    .sc-sub { font-size:10.5px; color:var(--muted); }
+    .sc-ico { position:absolute; right:18px; top:18px; font-size:20px; opacity:.13; }
+
+    /* panel */
+    .panel { background:var(--surf); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+    .ph2 { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; }
+    .ph2-title { font-size:12.5px; font-weight:700; }
+    .pb { padding:20px; }
+
+    /* views */
+    .view { display:none; animation:fu .3s ease; }
+    .view.on { display:block; }
+    @keyframes fu { from{opacity:0;transform:translateY(7px)} to{opacity:1;transform:translateY(0)} }
+
+    /* search */
+    .srch { position:relative; margin-bottom:14px; }
+    .srch input {
+      width:100%; padding:9px 14px 9px 36px;
+      background:var(--panel); border:1px solid var(--border); border-radius:8px;
+      color:var(--text); font-family:'JetBrains Mono',monospace; font-size:11.5px;
+      outline:none; transition:border-color .2s;
+    }
+    .srch input:focus { border-color:var(--bhi); }
+    .srch input::placeholder { color:var(--muted); }
+    .srch-ic { position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--muted); font-size:13px; pointer-events:none; }
+
+    /* toolbar */
+    .toolbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .cnt-lbl { font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--muted); }
+
+    /* table */
+    .tbl { width:100%; border-collapse:collapse; font-size:11.5px; }
+    .tbl thead tr { border-bottom:1px solid var(--border); }
+    .tbl th { padding:9px 12px; text-align:left; font-family:'JetBrains Mono',monospace; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); font-weight:400; }
+    .tbl td { padding:11px 12px; border-bottom:1px solid var(--border); transition:background .15s; }
+    .tbl tbody tr:hover td { background:var(--faint); }
+    .tbl tbody tr:last-child td { border-bottom:none; }
+    .idx { font-family:'JetBrains Mono',monospace; color:var(--muted); font-size:10px; }
+    .uname { font-weight:700; font-size:12.5px; }
+    .hwid-badge {
+      font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--accent);
+      background:rgba(96,165,250,0.06); padding:2px 7px; border-radius:4px;
+      border:1px solid rgba(96,165,250,0.11);
+      display:inline-block; max-width:250px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+
+    /* badges */
+    .badge {
+      display:inline-flex; align-items:center; gap:4px;
+      padding:2px 9px; border-radius:20px;
+      font-size:9.5px; font-weight:700; letter-spacing:.04em;
+    }
+    .badge-ok   { background:rgba(74,222,128,0.09); color:var(--success); border:1px solid rgba(74,222,128,0.18); }
+    .badge-miss { background:rgba(248,113,113,0.09); color:var(--danger);  border:1px solid rgba(248,113,113,0.18); }
+
+    /* buttons */
+    .btn {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:8px 14px; border:none; border-radius:8px;
+      font-family:'Syne',sans-serif; font-size:11.5px; font-weight:700;
+      cursor:pointer; transition:all .2s; letter-spacing:.03em;
+    }
+    .btn-primary { background:linear-gradient(135deg,var(--accent),#3b82f6); color:#071028; }
+    .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 18px rgba(96,165,250,.3); }
+    .btn-danger { background:rgba(248,113,113,.1); color:var(--danger); border:1px solid rgba(248,113,113,.18); }
+    .btn-danger:hover { background:rgba(248,113,113,.18); transform:translateY(-1px); }
+    .btn-ghost { background:var(--faint); color:var(--text); border:1px solid var(--border); }
+    .btn-ghost:hover { border-color:var(--bhi); }
+    .btn-sm { padding:5px 10px; font-size:10.5px; }
+
+    /* form */
+    .fg { margin-bottom:18px; }
+    .fl {
+      display:block; font-family:'JetBrains Mono',monospace; font-size:9.5px;
+      letter-spacing:.16em; text-transform:uppercase; color:var(--muted); margin-bottom:7px;
+    }
+    .fi {
+      width:100%; padding:9px 13px;
+      background:var(--panel); border:1px solid var(--border); border-radius:8px;
+      color:var(--text); font-family:'JetBrains Mono',monospace; font-size:12px;
+      outline:none; transition:border-color .2s, box-shadow .2s;
+    }
+    .fi:focus { border-color:var(--bhi); box-shadow:0 0 0 3px rgba(96,165,250,.06); }
+    .fi::placeholder { color:var(--muted); }
+
+    /* info card */
+    .icard { background:var(--panel); border:1px solid var(--border); border-radius:10px; padding:16px 18px; margin-top:18px; }
+    .irow { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-bottom:1px solid var(--border); }
+    .irow:last-child { border-bottom:none; }
+    .ikey { font-family:'JetBrains Mono',monospace; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); }
+    .ival { font-size:12.5px; font-weight:600; }
+
+    /* empty */
+    .empty { text-align:center; padding:56px 20px; }
+    .empty-ic { font-size:34px; margin-bottom:10px; opacity:.25; }
+    .empty h3 { font-size:14px; font-weight:700; margin-bottom:5px; }
+    .empty p { font-size:11px; color:var(--muted); }
+
+    /* skeleton */
+    .ske { height:11px; border-radius:4px; background:linear-gradient(90deg,var(--panel) 0%,rgba(255,255,255,0.045) 50%,var(--panel) 100%); background-size:200% 100%; animation:shim 1.5s infinite; }
+    @keyframes shim { from{background-position:200% 0} to{background-position:-200% 0} }
+
+    /* toast */
+    .toast-wrap { position:fixed; bottom:22px; right:22px; display:flex; flex-direction:column; gap:8px; z-index:9999; }
+    .toast {
+      display:flex; align-items:center; gap:9px;
+      padding:11px 15px; border-radius:10px; font-size:12.5px; font-weight:600;
+      min-width:250px; max-width:340px; backdrop-filter:blur(12px);
+      animation:tIn .3s cubic-bezier(.34,1.56,.64,1);
+    }
+    .toast.out { animation:tOut .25s ease forwards; }
+    @keyframes tIn  { from{opacity:0;transform:translateX(18px) scale(.96)} to{opacity:1;transform:translateX(0) scale(1)} }
+    @keyframes tOut { to  {opacity:0;transform:translateX(18px) scale(.95)} }
+    .toast-ok  { background:rgba(10,22,14,.95); border:1px solid rgba(74,222,128,.28); color:var(--success); }
+    .toast-err { background:rgba(22,10,10,.95); border:1px solid rgba(248,113,113,.28); color:var(--danger); }
+
+    /* confirm dialog */
+    .dlg-ov { position:fixed; inset:0; background:rgba(0,0,0,.72); backdrop-filter:blur(7px); display:none; align-items:center; justify-content:center; z-index:1000; }
+    .dlg-ov.on { display:flex; }
+    .dlg { background:var(--surf); border:1px solid var(--border); border-radius:14px; padding:26px; max-width:380px; width:90%; animation:dIn .25s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes dIn { from{opacity:0;transform:scale(.94)} to{opacity:1;transform:scale(1)} }
+    .dlg-ic { font-size:26px; margin-bottom:10px; }
+    .dlg-title { font-size:15px; font-weight:800; margin-bottom:7px; }
+    .dlg-body { font-size:12.5px; color:var(--muted); margin-bottom:20px; line-height:1.6; }
+    .dlg-target { color:var(--danger); font-weight:700; }
+    .dlg-btns { display:flex; gap:9px; justify-content:flex-end; }
+
+    /* guard overlay */
+    .guard { position:fixed; inset:0; background:rgba(5,7,12,.93); backdrop-filter:blur(18px) saturate(.6); display:none; align-items:center; justify-content:center; z-index:999999; }
+    .guard.on { display:flex; }
+    .gcard { position:relative; max-width:400px; width:90%; border-radius:18px; overflow:hidden; animation:gIn .45s cubic-bezier(.34,1.56,.64,1); }
+    @keyframes gIn { from{opacity:0;transform:translateY(24px) scale(.95)} to{opacity:1;transform:translateY(0) scale(1)} }
+    .gglow { position:absolute; inset:-1px; border-radius:19px; background:conic-gradient(from 0deg,transparent,rgba(248,113,113,.55) 60deg,transparent 120deg,transparent 300deg,rgba(248,113,113,.55)); animation:spin 4.5s linear infinite; z-index:0; }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    .ginner { position:relative; z-index:1; margin:1px; border-radius:17px; background:linear-gradient(155deg,#130d0d,#0d0a14); padding:32px 28px 26px; text-align:center; }
+    .gcode { font-family:'JetBrains Mono',monospace; font-size:8.5px; letter-spacing:.2em; color:rgba(248,113,113,.4); text-transform:uppercase; margin-bottom:8px; }
+    .gtitle { font-size:18px; font-weight:800; letter-spacing:-.01em; margin-bottom:8px; background:linear-gradient(135deg,#f87171,#fca5a5); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+    .gmsg { font-size:12px; color:rgba(226,232,240,.45); line-height:1.65; margin-bottom:20px; }
+    .gdismiss { display:inline-flex; align-items:center; gap:6px; padding:10px 20px; background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.22); border-radius:9px; color:var(--danger); font-family:'Syne',sans-serif; font-size:11px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; cursor:pointer; transition:all .2s; }
+    .gdismiss:hover { background:rgba(248,113,113,.16); transform:translateY(-1px); }
+    .gcd { font-family:'JetBrains Mono',monospace; font-size:9px; color:rgba(248,113,113,.3); margin-top:9px; letter-spacing:.08em; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--muted); border-radius:4px; }
+
+    @media(max-width:860px) {
+      .sb { width:200px; }
+      .main { margin-left:200px; }
+      .stats { grid-template-columns:1fr; }
+      .content { padding:18px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══ GUARD ══ -->
+<div class="guard" id="guard">
+  <div class="gcard">
+    <div class="gglow"></div>
+    <div class="ginner">
+      <div class="gcode">ERR · 0x403 · ACCESS_RESTRICTED</div>
+      <div class="gtitle">Action Blocked</div>
+      <div class="gmsg">Tindakan ini tidak diizinkan dalam sistem yang dilindungi.</div>
+      <button class="gdismiss" onclick="dg()">✕ Dismiss</button>
+      <div class="gcd" id="gcd"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM ══ -->
+<div class="dlg-ov" id="dlg">
+  <div class="dlg">
+    <div class="dlg-ic">⚠️</div>
+    <div class="dlg-title">Confirm Reset</div>
+    <div class="dlg-body">Reset HWID binding untuk user <span class="dlg-target" id="dlgTarget">—</span>?<br>User bisa login dari device baru setelah ini.</div>
+    <div class="dlg-btns">
+      <button class="btn btn-ghost" onclick="closeDlg()">Cancel</button>
+      <button class="btn btn-danger" id="dlgOk">Reset HWID</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TOAST ══ -->
+<div class="toast-wrap" id="tw"></div>
+
+<!-- ══ SIDEBAR ══ -->
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="logo-wrap">
+      <div class="logo-ico">🛡</div>
+      <div>
+        <div class="logo-name">Rebels</div>
+        <div class="logo-tag">Admin Panel</div>
+      </div>
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-cat">Management</div>
+    <div class="nav-item on" onclick="sw('users',this)">
+      <span class="nav-ic">👥</span> User List
+    </div>
+    <div class="nav-item" onclick="sw('reset',this)">
+      <span class="nav-ic">🔄</span> Reset HWID
+    </div>
+    <div class="nav-item" onclick="sw('check',this)">
+      <span class="nav-ic">🔍</span> Check User
+    </div>
+  </nav>
+  <div class="sb-foot">
+    <div class="online-pill">
+      <div class="dot"></div>
+      <div class="online-txt">System Online</div>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ MAIN ══ -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-l">HWID Management System</div>
+    <div class="topbar-r">
+      <div class="clock" id="clk"></div>
+      <div class="auth-pill">🔑 Authenticated</div>
+    </div>
+  </div>
+
+  <div class="content">
+    <div class="ph">
+      <div class="ph-eye">Dashboard Overview</div>
+      <div class="ph-title">Admin <span>Control Panel</span></div>
+    </div>
+
+    <!-- stats -->
+    <div class="stats">
+      <div class="scard">
+        <div class="sc-label">Total Users</div>
+        <div class="sc-val blue" id="sTotal">—</div>
+        <div class="sc-sub">Registered accounts</div>
+        <div class="sc-ico">👥</div>
+      </div>
+      <div class="scard">
+        <div class="sc-label">Bound Devices</div>
+        <div class="sc-val green" id="sDev">—</div>
+        <div class="sc-sub">HWID bindings active</div>
+        <div class="sc-ico">💻</div>
+      </div>
+      <div class="scard">
+        <div class="sc-label">Protection</div>
+        <div class="sc-val purple">ON</div>
+        <div class="sc-sub">Anti-downloader active</div>
+        <div class="sc-ico">🛡️</div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: users ── -->
+    <div class="view on" id="v-users">
+      <div class="panel">
+        <div class="ph2">
+          <div class="ph2-title">User Registry</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadUsers()">↺ Refresh</button>
+        </div>
+        <div class="pb">
+          <div class="srch">
+            <span class="srch-ic">⌕</span>
+            <input type="text" id="srchIn" placeholder="Search username or HWID..." oninput="filter()">
+          </div>
+          <div class="toolbar">
+            <div class="cnt-lbl" id="cntLbl">Loading...</div>
+          </div>
+          <div id="tblWrap">
+            <table class="tbl" id="tbl" style="display:none">
+              <thead><tr><th>#</th><th>Username</th><th>HWID</th><th>Status</th><th></th></tr></thead>
+              <tbody id="tbody"></tbody>
+            </table>
+            <div id="emptyState" class="empty" style="display:none">
+              <div class="empty-ic">📭</div>
+              <h3>No users yet</h3>
+              <p>No registered users found.</p>
+            </div>
+            <div id="skelWrap"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: reset ── -->
+    <div class="view" id="v-reset">
+      <div class="panel">
+        <div class="ph2"><div class="ph2-title">Reset HWID Binding</div></div>
+        <div class="pb">
+          <p style="font-size:12.5px;color:var(--muted);margin-bottom:20px;line-height:1.65">Reset HWID binding untuk user tertentu. User bisa login dari device baru setelah reset.</p>
+          <div class="fg"><label class="fl">Username</label><input class="fi" type="text" id="resetIn" placeholder="Enter username..."></div>
+          <button class="btn btn-danger" onclick="doReset()">🔄 Reset HWID</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── VIEW: check ── -->
+    <div class="view" id="v-check">
+      <div class="panel">
+        <div class="ph2"><div class="ph2-title">Check User Information</div></div>
+        <div class="pb">
+          <p style="font-size:12.5px;color:var(--muted);margin-bottom:20px;line-height:1.65">Cek info HWID user berdasarkan username.</p>
+          <div class="fg"><label class="fl">Username</label><input class="fi" type="text" id="checkIn" placeholder="Enter username..."></div>
+          <button class="btn btn-primary" onclick="doCheck()">🔍 Check User</button>
+          <div class="icard" id="checkRes" style="display:none">
+            <div class="irow"><div class="ikey">Username</div><div class="ival" id="rUser">—</div></div>
+            <div class="irow"><div class="ikey">HWID</div><div class="ival"><code class="hwid-badge" id="rHWID">—</code></div></div>
+            <div class="irow"><div class="ikey">Status</div><div class="ival" id="rStat">—</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+  // ── CONFIG ──
+  // Ganti API_URL ke URL backend Vercel kamu, contoh:
+  //   const API = 'https://rebels-backend.vercel.app';
+  const API = (() => {
+    // Coba baca dari ?api= query param, lalu localStorage, lalu current host
+    const p = new URLSearchParams(location.search).get('api');
+    if (p) { localStorage.setItem('rebels_api', p); return p.replace(/\/$/, ''); }
+    const s = localStorage.getItem('rebels_api');
+    if (s) return s.replace(/\/$/, '');
+    return window.location.origin; // fallback: same host
+  })();
+
+  const KEY = new URLSearchParams(location.search).get('key') || localStorage.getItem('rebels_key') || '';
+  if (KEY) localStorage.setItem('rebels_key', KEY);
+
+  let allUsers = [];
+
+  // ── clock ──
+  const clkEl = document.getElementById('clk');
+  setInterval(() => {
+    clkEl.textContent = new Date().toLocaleTimeString('en-GB', { hour12: false });
+  }, 1000);
+
+  // ── nav ──
+  function sw(name, el) {
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('on'));
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+    el.classList.add('on');
+    document.getElementById('v-' + name).classList.add('on');
+    if (name === 'users') loadUsers();
+  }
+
+  // ── load users ──
+  async function loadUsers() {
+    skel();
+    try {
+      const r = await fetch(`${API}/admin/list-users?key=${encodeURIComponent(KEY)}`);
+      if (!r.ok) { toast('HTTP ' + r.status, 'err'); hideSkel(); return; }
+      const d = await r.json();
+      if (!d.success) { toast(d.error || 'Failed', 'err'); hideSkel(); return; }
+      allUsers = d.users || [];
+      renderUsers(allUsers);
+      document.getElementById('sTotal').textContent = allUsers.length;
+      document.getElementById('sDev').textContent   = allUsers.length;
+    } catch (e) { toast('Fetch error: ' + e.message, 'err'); hideSkel(); }
+  }
+
+  function renderUsers(users) {
+    hideSkel();
+    const tbody  = document.getElementById('tbody');
+    const tbl    = document.getElementById('tbl');
+    const empty  = document.getElementById('emptyState');
+    const cnt    = document.getElementById('cntLbl');
+    tbody.innerHTML = '';
+    if (!users.length) {
+      tbl.style.display   = 'none';
+      empty.style.display = 'block';
+      cnt.textContent = '0 users';
+      return;
+    }
+    empty.style.display = 'none';
+    tbl.style.display   = 'table';
+    cnt.textContent = users.length + ' user' + (users.length !== 1 ? 's' : '');
+    users.forEach((u, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="idx">${String(i + 1).padStart(2, '0')}</td>
+        <td class="uname">${esc(u.username)}</td>
+        <td><code class="hwid-badge">${esc(u.hwid)}</code></td>
+        <td><span class="badge badge-ok">● Registered</span></td>
+        <td style="text-align:right">
+          <button class="btn btn-danger btn-sm" onclick="confirmReset('${esc(u.username)}')">Reset</button>
+        </td>`;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function filter() {
+    const q = document.getElementById('srchIn').value.toLowerCase();
+    renderUsers(allUsers.filter(u => u.username.toLowerCase().includes(q) || u.hwid.toLowerCase().includes(q)));
+  }
+
+  // ── reset ──
+  function confirmReset(username) {
+    document.getElementById('dlgTarget').textContent = username;
+    document.getElementById('dlg').classList.add('on');
+    document.getElementById('dlgOk').onclick = () => { closeDlg(); execReset(username); };
+  }
+
+  async function doReset() {
+    const u = document.getElementById('resetIn').value.trim();
+    if (!u) { toast('Enter a username', 'err'); return; }
+    confirmReset(u);
+  }
+
+  async function execReset(username) {
+    try {
+      const r = await fetch(`${API}/admin/reset-hwid?username=${encodeURIComponent(username)}&key=${encodeURIComponent(KEY)}`);
+      const d = await r.json();
+      if (d.success) {
+        toast('HWID reset: ' + username, 'ok');
+        document.getElementById('resetIn').value = '';
+        loadUsers();
+      } else {
+        toast('Reset failed: ' + (d.error || d.message || '?'), 'err');
+      }
+    } catch (e) { toast('Error: ' + e.message, 'err'); }
+  }
+
+  function closeDlg() { document.getElementById('dlg').classList.remove('on'); }
+
+  // ── check ──
+  async function doCheck() {
+    const u = document.getElementById('checkIn').value.trim();
+    if (!u) { toast('Enter a username', 'err'); return; }
+    try {
+      const r = await fetch(`${API}/admin/check-hwid?username=${encodeURIComponent(u)}&key=${encodeURIComponent(KEY)}`);
+      const d = await r.json();
+      if (d.error) { toast('Error: ' + d.error, 'err'); return; }
+      document.getElementById('rUser').textContent = d.username;
+      document.getElementById('rHWID').textContent = d.hwid;
+      document.getElementById('rStat').innerHTML = d.exists
+        ? '<span class="badge badge-ok">● Registered</span>'
+        : '<span class="badge badge-miss">● Not Found</span>';
+      document.getElementById('checkRes').style.display = 'block';
+      toast('User info loaded', 'ok');
+    } catch (e) { toast('Error: ' + e.message, 'err'); }
+  }
+
+  // ── skeleton ──
+  function skel() {
+    document.getElementById('tbl').style.display        = 'none';
+    document.getElementById('emptyState').style.display = 'none';
+    document.getElementById('cntLbl').textContent = 'Loading...';
+    document.getElementById('skelWrap').innerHTML = Array.from({ length: 5 }, (_, i) => `
+      <table class="tbl"><tbody><tr>
+        <td><div class="ske" style="width:22px"></div></td>
+        <td><div class="ske" style="width:${80 + i * 18}px"></div></td>
+        <td><div class="ske" style="width:${140 + i * 14}px"></div></td>
+        <td><div class="ske" style="width:72px"></div></td>
+        <td><div class="ske" style="width:52px;margin-left:auto"></div></td>
+      </tr></tbody></table>`).join('');
+  }
+  function hideSkel() { document.getElementById('skelWrap').innerHTML = ''; }
+
+  // ── toast ──
+  let tid = 0;
+  function toast(msg, type = 'ok') {
+    const wrap = document.getElementById('tw');
+    const el   = document.createElement('div');
+    el.className = 'toast toast-' + (type === 'ok' ? 'ok' : 'err');
+    el.innerHTML = `<span>${type === 'ok' ? '✓' : '✕'}</span><span>${esc(msg)}</span>`;
+    wrap.appendChild(el);
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 300); }, 3200);
+  }
+
+  // ── guard ──
+  let gt;
+  function sg() {
+    document.getElementById('guard').classList.add('on');
+    let t = 3;
+    const cd = document.getElementById('gcd');
+    cd.textContent = `Auto-dismiss in ${t}s`;
+    clearInterval(gt);
+    gt = setInterval(() => { if (--t <= 0) { clearInterval(gt); dg(); } else cd.textContent = `Auto-dismiss in ${t}s`; }, 1000);
+  }
+  function dg() { clearInterval(gt); document.getElementById('guard').classList.remove('on'); }
+
+  // ── protection ──
+  document.addEventListener('contextmenu', e => { e.preventDefault(); sg(); });
+  document.addEventListener('keydown', e => {
+    if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) || (e.ctrlKey && [85, 83].includes(e.keyCode)))
+    { e.preventDefault(); sg(); }
+  });
+  document.addEventListener('copy', e => { if (window.getSelection().toString().length > 50) { e.preventDefault(); sg(); } });
+  document.addEventListener('selectstart', e => { if (!['INPUT', 'TEXTAREA'].includes(e.target.tagName)) e.preventDefault(); });
+  document.addEventListener('keyup', e => { if (e.key === 'PrintScreen') { navigator.clipboard?.writeText(''); sg(); } });
+  window.addEventListener('beforeprint', e => { e.preventDefault(); sg(); });
+  if (window.top !== window.self) window.top.location = window.self.location;
+  setInterval(() => console.clear(), 2500);
+  const no = () => {}; ['log','debug','info','warn','error'].forEach(m => console[m] = no);
+
+  // ── utils ──
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ── boot ──
+  if (!KEY) toast('No admin key — add ?key=YOUR_KEY to URL', 'err');
+  window.addEventListener('load', loadUsers);
+</script>
+</body>
+</html>
